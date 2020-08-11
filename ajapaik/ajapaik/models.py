@@ -956,6 +956,20 @@ class ImageSimilarity(Model):
         points += imageSimilarity2.__add_or_update__()
         return points
 
+    def __add_related_similarity_relations__(self, original_from_photo, from_photo, to_photo, confirmed, similarity_type, guesser, exclude_list):
+        existing_similarities = ImageSimilarity.objects.filter(from_photo=to_photo).exclude(Q(to_photo=from_photo) | (Q(to_photo=original_from_photo) | Q(similarity_type=0) | Q(to_photo_id__in=exclude_list)))
+        for similarity in existing_similarities:
+            exclude_list.extend([similarity.to_photo.id, similarity.from_photo.id])
+            new_confirmed = similarity.confirmed if similarity.confirmed == confirmed else False
+            new_similarity_type = similarity.similarity_type if similarity.similarity_type == similarity_type else 1
+            similarity_from = ImageSimilarity(None, from_photo = original_from_photo, to_photo=similarity.to_photo, confirmed=new_confirmed, similarity_type=new_similarity_type, user_last_modified=guesser)
+            similarity_to = ImageSimilarity(None, from_photo = similarity.to_photo, to_photo=original_from_photo, confirmed=new_confirmed, similarity_type=new_similarity_type, user_last_modified=guesser)
+            similarity_from.__add_or_update__()
+            similarity_to.__add_or_update__()
+            exclude_list.extend(similarity_from.__add_related_similarity_relations__(original_from_photo, similarity.from_photo, similarity.to_photo, new_confirmed, new_similarity_type, guesser, exclude_list))
+            print(len(exclude_list))
+        return list(set(exclude_list))
+
 class ImageSimilarityGuess(Model):
     image_similarity = ForeignKey(ImageSimilarity, on_delete=CASCADE, related_name='image_similarity')
     guesser = ForeignKey('Profile', on_delete=CASCADE, related_name='image_similarity_guesser')
