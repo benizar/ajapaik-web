@@ -51,7 +51,7 @@ function VanalinnadGooglemApi(city, isGeotagger) {
     });
 
     this.setLayer = function() {
-        let historicalMapsOverlay = new google.maps.ImageMapType({
+        map.overlayMapTypes.push(new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
                 let tilesPerGlobe = 1 << zoom,
                 x = coord.x % tilesPerGlobe;
@@ -76,8 +76,7 @@ function VanalinnadGooglemApi(city, isGeotagger) {
             tileSize: new google.maps.Size(256, 256),
             maxZoom: 16,
             minZoom: 12
-        });
-        map.overlayMapTypes.push(historicalMapsOverlay);
+        }));
     };
 
     this.changeIndex = function (index) {
